@@ -1,0 +1,38 @@
+{
+  "name": "coffice-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node src/index.js -r node_modules/dotenv/config",
+    "clean": "rm -rf build && mkdir build",
+    "build-server": "babel -d ./build ./src -s -r node_modules/dotenv/config",
+    "build": "npm run clean && npm run build-server",
+    "lint": "eslint --fix ./src",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.com:uplab-io/customer-office/coffice-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.9.3",
+    "apollo-server-express": "^2.9.3",
+    "express": "^4.17.1",
+    "graphql": "^14.5.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.1.6",
+    "@babel/node": "^7.0.0",
+    "@babel/preset-env": "^7.1.6",
+    "@babel/register": "^7.0.0",
+    "dotenv": "^8.1.0",
+    "eslint": "^6.3.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "nodemon": "^1.18.7"
+  }
+}
