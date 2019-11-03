@@ -27,11 +27,8 @@ export const resolvers = {
     name: doc => doc.profile.name,
   },
   Query: {
-    me: () => {
-      return {
-        _id: 'Test',
-        name: 'Ihor Barmak',
-      };
+    me: (root, args, ctx) => {
+      return ctx.user;
     },
   },
   Mutation: {

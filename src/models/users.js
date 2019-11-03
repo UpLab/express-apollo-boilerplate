@@ -60,6 +60,10 @@ UserSchema.statics.findByEmail = function findUserByEmail(email) {
   return this.findOne({ 'email.address': email });
 };
 
+UserSchema.statics.findById = function findUserById(_id) {
+  return this.findOne({ _id });
+};
+
 const UserModel = mongoose.model('User', UserSchema);
 
 export default UserModel;

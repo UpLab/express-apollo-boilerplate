@@ -14,7 +14,6 @@ export default async () => {
   Logger.silly('Connected');
   // we need to load this plugin after all of the models are loaded.
   // ref: https://www.npmjs.com/package/mongoose-beautiful-unique-validation#usage
-  // console.log('Attaching beautify unique');
   // mongoose.plugin(beautifyUnique);
 
   // Load all models

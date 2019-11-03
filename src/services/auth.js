@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 /* eslint-disable no-underscore-dangle */
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
@@ -116,6 +117,21 @@ class AuthService {
       },
       config.jwtSecret,
     );
+  }
+
+  decodeToken(token) {
+    const decoded = jwt.verify(token, config.jwtSecret);
+    return decoded;
+  }
+
+  validateToken(token) {
+    let decoded = token;
+    if (typeof token === 'string') {
+      decoded = this.decodeToken(token);
+    }
+    const isNotExpired = decoded.exp > new Date().getTime() / 1000;
+    if (isNotExpired) return decoded;
+    return null;
   }
 }
 
