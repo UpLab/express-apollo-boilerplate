@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import beautifyUnique from 'mongoose-beautiful-unique-validation';
 
 export const globalRoles = {
   ADMIN: 'admin',
@@ -6,7 +7,7 @@ export const globalRoles = {
   TEAM: 'team',
 };
 
-const User = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     services: {
       password: {
@@ -18,7 +19,7 @@ const User = new mongoose.Schema(
       address: {
         type: String,
         lowercase: true,
-        unique: true,
+        unique: 'A user with the email {VALUE} is already registered',
         index: true,
         required: [true, 'Please enter an email'],
       },
@@ -44,4 +45,21 @@ const User = new mongoose.Schema(
   },
   { timestamps: true },
 );
-export default mongoose.model('User', User);
+
+// Beautify unique messages
+// ref: https://www.npmjs.com/package/mongoose-beautiful-unique-validation#usage
+UserSchema.plugin(beautifyUnique);
+
+// UserSchema.plugin(require('mongoose-beautiful-unique-validation'));
+
+UserSchema.methods.isVerified = function isVerified() {
+  return !!this.email.verified;
+};
+
+UserSchema.statics.findByEmail = function findUserByEmail(email) {
+  return this.findOne({ 'email.address': email });
+};
+
+const UserModel = mongoose.model('User', UserSchema);
+
+export default UserModel;
