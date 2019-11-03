@@ -1,14 +1,20 @@
-import { gql } from 'apollo-server-express';
+import { makeExecutableSchema, gql } from 'apollo-server-express';
+import merge from 'lodash/merge';
+import { typeDef as User, resolvers as userResolvers } from './user';
 
-const typeDefs = gql`
-type Query {
-  helloWorld: String
-}
+const Common = gql`
+  type Query {
+    _empty: String
+  }
 
-
-schema {
-  query: Query
-}
+  type Mutation {
+    _empty: String
+  }
 `;
 
-export default typeDefs;
+const schema = makeExecutableSchema({
+  typeDefs: [Common, User],
+  resolvers: merge(userResolvers),
+});
+
+export default schema;
