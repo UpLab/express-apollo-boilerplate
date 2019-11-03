@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "commit": "npx git-cz",
     "start": "nodemon",
     "debug": "nodemon --inspect src/index.js",
     "test": "jest",
@@ -11,7 +12,11 @@
     "build-server": "babel -d ./build ./src -s -r node_modules/dotenv/config",
     "build": "npm run clean && npm run build-server",
     "lint": "eslint ./src",
-    "lint:fix": "eslint --fix ./src"
+    "lint:fix": "eslint --fix ./src",
+    "release": "standard-version",
+    "release:major": "npm run release -- --release-as major",
+    "release:minor": "npm run release -- --release-as minor",
+    "release:patch": "npm run release -- --release-as patch"
   },
   "repository": {
     "type": "git",
@@ -46,13 +51,33 @@
     "@babel/node": "7.6.3",
     "@babel/preset-env": "7.6.3",
     "@babel/register": "7.6.2",
+    "cz-conventional-changelog": "^3.0.2",
     "eslint": "6.6.0",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-config-prettier": "6.5.0",
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-prettier": "3.1.1",
+    "husky": "^3.0.9",
     "jest": "24.9.0",
+    "lint-staged": "^9.4.2",
     "nodemon": "1.19.4",
-    "prettier": "1.18.2"
+    "prettier": "1.18.2",
+    "standard-version": "^7.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
