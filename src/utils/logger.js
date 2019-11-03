@@ -12,6 +12,18 @@ if (process.env.NODE_ENV !== 'development') {
   );
 }
 
+const errorFormatter = winston.format(info => {
+  if (info && info.name === 'ValidationError' && !info.message) {
+    const message = Object.values(info.errors)
+      .map(error => error.message)
+      .join('\n');
+    // eslint-disable-next-line no-param-reassign
+    info.message = message;
+  }
+
+  return info;
+});
+
 const LoggerInstance = winston.createLogger({
   level: config.logs.level,
   levels: winston.config.npm.levels,
@@ -20,6 +32,8 @@ const LoggerInstance = winston.createLogger({
       format: 'YYYY-MM-DD HH:mm:ss',
     }),
     winston.format.errors({ stack: true }),
+    errorFormatter(),
+    winston.format.metadata(),
     winston.format.splat(),
     winston.format.json(),
   ),
